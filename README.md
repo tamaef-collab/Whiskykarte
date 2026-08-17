@@ -1,8 +1,19 @@
-# German Whisky Map — exact demo package
+# German Whisky Map — Phase 1 Prototype
 
-This package is mechanically split from the approved `german_whisky_map_demo.html` so the page structure, styles, interactions and demo data remain the same.
+Static GitHub Pages-ready prototype.
 
-## GitHub Pages
-Upload the **contents of this folder** to the repository root. Set Pages to `main` / `(root)`.
+## Included
+- Homepage search and Bundesland discovery
+- Bayern demo results with list + interactive map
+- Distillery profile
+- Clickable lightbox gallery
+- Three recommended whisky tiers
+- Clickable product-detail modal with image, specs, external-rating placeholders and community-review UI
+- Media / Story area prepared for future distillery-visit / creator videos
+- Rohstoffe, Technik & Equipment, Events & Highlights entry points
 
-External dependencies used by the approved demo (Leaflet, map tiles, and prototype image URLs) remain external so the deployed page matches the demo. Replace prototype image URLs with licensed local assets before production launch.
+## Deployment
+Upload the CONTENTS of this folder to the repository root and enable GitHub Pages from `main` / `(root)`.
+
+## Phase 2 backend hooks
+Community login/reviews and live external ratings are intentionally UI-only in this static prototype. Connect them later to a backend (e.g. Supabase) and a compliant external reviews/Places integration.

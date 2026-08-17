@@ -45,3 +45,17 @@ document.getElementById('lightbox').addEventListener('click',e=>{if(e.target.id=
 // Extend the existing profile renderer without changing its original behavior.
 const _openProfile=openProfile;
 openProfile=function(id){_openProfile(id);const d=ds.find(x=>x.id===id);renderGallery(d)};
+
+// Phase-1 product details. Later these records can move into products.json / Supabase.
+const productDetails={
+ 'SLYRS Single Malt Classic':{type:'Single Malt',abv:'43 %',age:'NAS',cask:'American White Oak',peat:'Unpeated',notes:'Fruchtig · Vanille · Karamell',img:'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=900&q=82'},
+ 'Classic – Mild & Fruity':{type:'Single Malt',abv:'—',age:'—',cask:'—',peat:'Mild / unpeated',notes:'Mild · fruchtig',img:'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?auto=format&fit=crop&w=900&q=82'},
+ 'Peated – Rich & Smoky':{type:'Single Malt',abv:'—',age:'—',cask:'—',peat:'Peated',notes:'Rauchig · kräftig',img:'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=82'}
+};
+let activeDistillery=null;
+const _openProfileProduct=openProfile;
+openProfile=function(id){_openProfileProduct(id);activeDistillery=ds.find(x=>x.id===id);pProducts.innerHTML=activeDistillery.products.map((p,i)=>`<article class="product"><div class="tier">${p[0]}</div><h3 class="productLink" onclick="openProduct(${i})">${p[1]}</h3><p>${p[2]}</p><p><span class="gloss" title="Im Live-System öffnet sich hier die Glossar-Erklärung.">Fachbegriffe ⓘ</span></p></article>`).join('')};
+function openProduct(i){if(!activeDistillery)return;const p=activeDistillery.products[i],d=productDetails[p[1]]||{};document.getElementById('pmTier').textContent=p[0];document.getElementById('pmName').textContent=p[1];document.getElementById('pmDistillery').textContent=activeDistillery.name+' · '+activeDistillery.city;document.getElementById('pmDesc').textContent=p[2]||'Produktbeschreibung wird ergänzt.';document.getElementById('pmImg').src=d.img||galleryFor(activeDistillery)[2][0];document.getElementById('pmSpecs').innerHTML=[['Whisky-Typ',d.type||'Zu ergänzen'],['Alkohol',d.abv||'Zu ergänzen'],['Alter',d.age||'Zu ergänzen'],['Fass / Reifung',d.cask||'Zu ergänzen'],['Rauch / Torf',d.peat||'Zu ergänzen'],['Profil',d.notes||p[2]||'Zu ergänzen']].map(x=>`<div class="pmSpec"><b>${x[0]}</b>${x[1]}</div>`).join('');document.getElementById('productModal').classList.add('open');document.getElementById('productModal').setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
+function closeProduct(){document.getElementById('productModal').classList.remove('open');document.getElementById('productModal').setAttribute('aria-hidden','true');document.body.style.overflow=''}
+document.getElementById('productModal').addEventListener('click',e=>{if(e.target.id==='productModal')closeProduct()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('productModal').classList.contains('open'))closeProduct()});
