@@ -15,3 +15,33 @@ let map,markers=[];function initMap(){if(map)return;map=L.map('map').setView([49
 function showResults(){document.getElementById('results').style.display='block';initMap();setTimeout(()=>map.invalidateSize(),50);render();document.getElementById('results').scrollIntoView({behavior:'smooth'})}function regionBavaria(){document.getElementById('region').value='Bayern';showResults()}
 function render(){let q=document.getElementById('query').value.toLowerCase().trim(),reg=document.getElementById('region').value;let rows=ds.filter(d=>(reg==='all'||d.region===reg)&&(!q||(d.name+' '+d.city+' '+d.type+' '+d.styles.join(' ')).toLowerCase().includes(q)));document.getElementById('resultTitle').textContent=reg==='all'?'Whisky in Deutschland':'Whisky in '+reg;document.getElementById('resultCount').textContent=rows.length+' Brennereien in dieser Demo';document.getElementById('list').innerHTML=rows.map(d=>`<div class="card" onclick="focusD(${d.id})"><h3>${d.name}</h3><div class="meta">${d.city} · ${d.type}</div><div class="desc">${d.desc}</div><div class="tags">${d.styles.map(x=>`<span class="tag">${x}</span>`).join('')}</div></div>`).join('');markers.forEach(m=>map.removeLayer(m));markers=[];rows.forEach(d=>{let m=L.marker([d.lat,d.lng]).addTo(map).bindPopup(`<div class="pop"><b>${d.name}</b><br><small>${d.city}</small><br><span class="open" onclick="openProfile(${d.id})">Profil öffnen</span></div>`);m.did=d.id;markers.push(m)});if(rows.length){let g=L.featureGroup(markers);map.fitBounds(g.getBounds().pad(.15))}}
 function focusD(id){let d=ds.find(x=>x.id===id),m=markers.find(x=>x.did===id);map.setView([d.lat,d.lng],11);if(m)m.openPopup()}function openProfile(id){let d=ds.find(x=>x.id===id);document.getElementById('home').style.display='none';document.getElementById('profile').style.display='block';pName.textContent=d.name;pLoc.textContent=d.city+', '+d.region;pDesc.textContent=d.desc;pRegion.textContent=d.region;pType.textContent=d.type;pProducts.innerHTML=d.products.map(p=>`<article class="product"><div class="tier">${p[0]}</div><h3>${p[1]}</h3><p>${p[2]}</p><p><span class="gloss" title="Im Live-System öffnet sich hier die Glossar-Erklärung.">Fachbegriffe ⓘ</span></p></article>`).join('');window.scrollTo(0,0)}function backToResults(){profile.style.display='none';home.style.display='block';setTimeout(()=>{map.invalidateSize();document.getElementById('results').scrollIntoView()},30)}
+
+// Gallery data is intentionally separated from the core distillery records so it can later move to JSON/database storage.
+const galleryByDistillery={
+  1:[
+    ['https://images.unsplash.com/photo-1569529465841-dfecdab7503b?auto=format&fit=crop&w=1600&q=82','Brennerei & Whisky'],
+    ['https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=1200&q=82','Fasslager'],
+    ['https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=82','Whisky im Glas'],
+    ['https://images.unsplash.com/photo-1528823872057-9c018a7a7553?auto=format&fit=crop&w=1200&q=82','Abfüllung & Produkt'],
+    ['https://images.unsplash.com/photo-1527761939622-911909463b7a?auto=format&fit=crop&w=1200&q=82','Holz & Reifung']
+  ]
+};
+let currentGallery=[],galleryIndex=0;
+function galleryFor(d){return galleryByDistillery[d.id]||[
+ ['https://images.unsplash.com/photo-1569529465841-dfecdab7503b?auto=format&fit=crop&w=1600&q=82','Brennerei'],
+ ['https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=1200&q=82','Fasslager'],
+ ['https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=82','Whisky'],
+ ['https://images.unsplash.com/photo-1528823872057-9c018a7a7553?auto=format&fit=crop&w=1200&q=82','Produkt']
+]}
+function renderGallery(d){currentGallery=galleryFor(d);let shown=currentGallery.slice(0,5);document.getElementById('pGallery').innerHTML=shown.map((g,i)=>`<div class="galleryItem" onclick="openGallery(${i})"><img src="${g[0]}" alt="${g[1]}" loading="lazy">${i===shown.length-1&&currentGallery.length>shown.length?`<div class="galleryMore">+${currentGallery.length-shown.length} Fotos</div>`:''}</div>`).join('')}
+function openGallery(i=0){if(!currentGallery.length)return;galleryIndex=i;document.getElementById('lightbox').classList.add('open');document.getElementById('lightbox').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';updateLightbox()}
+function closeGallery(){document.getElementById('lightbox').classList.remove('open');document.getElementById('lightbox').setAttribute('aria-hidden','true');document.body.style.overflow=''}
+function updateLightbox(){let g=currentGallery[galleryIndex];document.getElementById('lbImg').src=g[0];document.getElementById('lbImg').alt=g[1];document.getElementById('lbCaption').textContent=g[1];document.getElementById('lbCount').textContent=(galleryIndex+1)+' / '+currentGallery.length}
+function galleryPrev(){galleryIndex=(galleryIndex-1+currentGallery.length)%currentGallery.length;updateLightbox()}
+function galleryNext(){galleryIndex=(galleryIndex+1)%currentGallery.length;updateLightbox()}
+document.addEventListener('keydown',e=>{if(!document.getElementById('lightbox').classList.contains('open'))return;if(e.key==='Escape')closeGallery();if(e.key==='ArrowLeft')galleryPrev();if(e.key==='ArrowRight')galleryNext()});
+document.getElementById('lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox')closeGallery()});
+
+// Extend the existing profile renderer without changing its original behavior.
+const _openProfile=openProfile;
+openProfile=function(id){_openProfile(id);const d=ds.find(x=>x.id===id);renderGallery(d)};
